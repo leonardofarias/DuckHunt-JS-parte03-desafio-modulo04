@@ -35,6 +35,7 @@ class Game {
     this.waveEnding = false;
     this.quackingSoundId = null;
     this.levels = levels.normal;
+    this.datasetMode = new URLSearchParams(window.location.search).has('dataset');
     return this;
   }
 
@@ -406,6 +407,18 @@ class Game {
       this.level = this.levels[this.levelIndex];
     }
 
+    if (this.datasetMode) {
+      this.level = {
+        ...this.level,
+        title: 'Dataset Mode',
+        waves: 999,
+        ducks: 6,
+        speed: 3,
+        bullets: 999,
+        time: 9999
+      };
+    }
+
     this.maxScore += this.level.waves * this.level.ducks * this.level.pointsPerDuck;
     this.ducksShot = 0;
     this.ducksMissed = 0;
@@ -421,7 +434,7 @@ class Game {
     this.quackingSoundId = sound.play('quacking');
     this.wave += 1;
     this.waveStartTime = Date.now();
-    this.bullets = this.level.bullets;
+    this.bullets = this.datasetMode ? 999 : this.level.bullets;
     this.ducksShotThisWave = 0;
     this.waveEnding = false;
 
@@ -457,6 +470,10 @@ class Game {
       return false;
     }
 
+    if (this.datasetMode) {
+      return !this.stage.ducksActive();
+    }
+
     return this.isWaveTimeUp() || (this.outOfAmmo() && this.stage.ducksAlive()) || !this.stage.ducksActive();
   }
 
@@ -478,6 +495,12 @@ class Game {
   }
 
   goToNextLevel() {
+    if (this.datasetMode) {
+      this.levelIndex = 0;
+      this.startLevel();
+      return;
+    }
+
     this.levelIndex++;
     if (!this.levelWon()) {
       this.loss();

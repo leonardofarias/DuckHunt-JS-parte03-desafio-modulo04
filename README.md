@@ -63,6 +63,14 @@ Ao abrir nesse modo, aparecerá uma barra no canto superior esquerdo com dois bo
 
 Nesse modo, a IA continua calculando predições, mas o clique automático é desativado para evitar que o jogo termine rápido durante a coleta.
 
+Além disso, o jogo entra em um modo especial para dataset:
+
+- aumenta a quantidade de ondas
+- aumenta a quantidade de balas
+- aumenta o tempo da fase
+- reduz a velocidade dos patos
+- evita que a onda termine apenas por tempo ou falta de munição
+
 Cada arquivo `.txt` é gerado no formato YOLO:
 
 ```text
