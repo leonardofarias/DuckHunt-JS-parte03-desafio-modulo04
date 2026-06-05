@@ -16,29 +16,56 @@ Objetivos principais:
 - Fazer o jogo agir sozinho com base nas predições do modelo
 - Estudar o artigo do Hugo sobre extensão do YOLO para identificar novos objetos, como prateleiras vazias
 
-## Proposta deste projeto
+## Implementação realizada
 
-Neste projeto, a ideia é usar o Duck Hunt como ambiente de teste para criar uma IA que:
+Neste projeto, a IA usa o Duck Hunt como ambiente de teste e funciona da seguinte forma:
 
-- Captura a tela do jogo
-- Envia a imagem para um Web Worker
-- Pré-processa a imagem com TensorFlow.js
-- Executa inferência com um modelo YOLO
-- Filtra as predições válidas
-- Calcula o centro do objeto detectado
-- Envia as coordenadas para a thread principal
+- Captura frames do jogo a cada 200ms via `renderer.extract.canvas(game.stage)`
+- Envia o frame como `ImageBitmap` para um Web Worker
+- Pré-processa a imagem com **letterboxing** (igual ao YOLOv5 training): escala mantendo aspecto + padding cinza (114,114,114) até 640×640, normalização NCHW
+- Executa inferência com **ONNX Runtime Web** (backend WASM via CDN)
+- Seleciona apenas a detecção de maior confiança (`class=duck`, score = obj_conf × class_conf ≥ 0.3)
+- Desfaz o letterboxing para recuperar coordenadas no espaço do stage (800×600)
 - Move a mira e dispara automaticamente
 
-## Fluxo esperado
+## Modelo treinado
 
-1. Capturar imagens ou frames do jogo
-2. Escolher a classe que será detectada, como `duck`
-3. Anotar as imagens com bounding boxes
-4. Treinar ou ajustar um modelo YOLO para a nova classe
-5. Converter/exportar o modelo para TensorFlow.js
-6. Substituir o modelo em `machine-learning/yolov5n_web_model`
-7. Atualizar o filtro de classe no `worker.js`
-8. Validar se o jogo consegue mirar e clicar sozinho
+- **Arquitetura**: YOLOv5n (nano)
+- **Dataset**: 399 imagens capturadas pelo coletor automático do próprio jogo
+- **Treinamento**: 100 épocas, imagens 640×640
+- **Resultado**: mAP50 = **0.786**
+- **Formato de exportação**: ONNX com `--simplify` via `export.py`
+- **Arquivo**: `machine-learning/yolov5_onnx_model/best.onnx`
+
+## Fluxo de treino
+
+1. Capturar imagens com `?dataset` (modo coleta automática)
+2. Organizar dataset em `dataset/images/train|val` e `dataset/labels/train|val`
+3. Treinar com YOLOv5: `python train.py --weights yolov5n.pt --data duck.yaml --epochs 100 --imgsz 640`
+4. Exportar: `python export.py --weights runs/train/.../best.pt --include onnx --simplify`
+5. Copiar `best.onnx` e `labels.json` para `machine-learning/yolov5_onnx_model/`
+
+## Sistema de coordenadas (decisão técnica importante)
+
+O jogo usa dois espaços de coordenadas distintos:
+
+| Espaço | Dimensão | Uso |
+|---|---|---|
+| **Stage local** | 800 × 600 | Posição dos patos (`duck.position`) |
+| **CSS pixels** | `window.innerWidth × window.innerHeight` | Eventos de clique (`handleClick`) |
+
+A extração de frames usa `renderer.extract.canvas(game.stage)` que retorna um canvas em **coordenadas do stage local (~800×600)** — o mesmo espaço em que o modelo foi treinado. Por isso `data.x/y` retornados pelo worker são usados diretamente como `stageX/Y`, e apenas na hora do clique são multiplicados pela escala da janela:
+
+```javascript
+game.handleClick({
+    global: {
+        x: stageX * game.stage.scale.x,  // converte para CSS pixels
+        y: stageY * game.stage.scale.y,
+    }
+});
+```
+
+Isso garante que a IA funciona corretamente em qualquer resolução de tela.
 
 ## Coleta automática de dataset
 
@@ -102,7 +129,7 @@ dataset/
 - `machine-learning/worker.js`: roda a lógica de IA em um Web Worker
 - `machine-learning/main.js`: conecta o worker com o jogo
 - `machine-learning/datasetCollector.js`: ativa o coletor automático de frames e labels quando a URL contém `?dataset`
-- `machine-learning/yolov5n_web_model`: pasta do modelo usado pelo TensorFlow.js
+- `machine-learning/yolov5_onnx_model`: pasta com o modelo ONNX treinado (`best.onnx`) e `labels.json`
 
 ## Como executar
 
