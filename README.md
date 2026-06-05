@@ -40,10 +40,58 @@ Neste projeto, a ideia é usar o Duck Hunt como ambiente de teste para criar uma
 7. Atualizar o filtro de classe no `worker.js`
 8. Validar se o jogo consegue mirar e clicar sozinho
 
+## Coleta automática de dataset
+
+O projeto possui um modo simples de coleta de dataset para gerar imagens e labels no formato YOLO usando a posição real dos patos no jogo.
+
+Para ativar o coletor, execute o projeto normalmente:
+
+```bash
+npm start
+```
+
+Depois abra a aplicação com o parâmetro `dataset`:
+
+```text
+http://localhost:8080/?dataset
+```
+
+Ao abrir nesse modo, aparecerá uma barra no canto superior esquerdo com dois botões:
+
+- `Capturar frame`: baixa uma imagem `.png` do frame atual e um arquivo `.txt` com as labels YOLO
+- `Iniciar auto captura`: captura automaticamente um frame por segundo até ser interrompido
+
+Cada arquivo `.txt` é gerado no formato YOLO:
+
+```text
+class_id x_center y_center width height
+```
+
+Neste projeto, a classe `duck` usa o `class_id` igual a `0`.
+
+Exemplo:
+
+```text
+0 0.512340 0.423100 0.087500 0.063200
+```
+
+Depois de baixar os arquivos, organize-os em uma estrutura como:
+
+```text
+dataset/
+  images/
+    train/
+    val/
+  labels/
+    train/
+    val/
+```
+
 ## Estrutura importante
 
 - `machine-learning/worker.js`: roda a lógica de IA em um Web Worker
 - `machine-learning/main.js`: conecta o worker com o jogo
+- `machine-learning/datasetCollector.js`: ativa o coletor automático de frames e labels quando a URL contém `?dataset`
 - `machine-learning/yolov5n_web_model`: pasta do modelo usado pelo TensorFlow.js
 
 ## Como executar

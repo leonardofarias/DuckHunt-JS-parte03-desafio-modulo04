@@ -1,7 +1,9 @@
 import { buildLayout } from "./layout";
+import { setupDatasetCollector } from "./datasetCollector";
 
 export default async function main(game) {
     const container = buildLayout(game.app);
+    setupDatasetCollector(game);
     const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
 
     game.stage.aim.visible = false;
