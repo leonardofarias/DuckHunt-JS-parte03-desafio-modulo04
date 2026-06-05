@@ -42,10 +42,12 @@ module.exports.toggleFullscreen = function() {
   const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen ||
     doc.webkitExitFullscreen || doc.msExitFullscreen;
 
-  if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-    requestFullScreen.call(docEl);
-  }
-  else {
-    cancelFullScreen.call(doc);
-  }
+  try {
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+      const result = requestFullScreen.call(docEl);
+      if (result && result.catch) result.catch(() => {});
+    } else {
+      cancelFullScreen.call(doc);
+    }
+  } catch (_) {}
 };

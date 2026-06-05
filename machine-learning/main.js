@@ -12,15 +12,17 @@ export default async function main(game) {
         const { type, x, y } = data;
 
         if (type === 'prediction') {
-            console.log(`🎯 AI predicted at: (${x}, ${y})`);
             container.updateHUD(data);
             game.stage.aim.visible = true;
 
-            game.stage.aim.setPosition(data.x, data.y);
-            const position = game.stage.aim.getGlobalPosition();
+            // data.x/y em coordenadas do stage local (800x600) — igual ao espaço de treino
+            const stageX = data.x;
+            const stageY = data.y;
+            game.stage.aim.setPosition(stageX, stageY);
 
+            // handleClick espera CSS pixels — multiplica pelas escalas do stage
             game.handleClick({
-                global: position,
+                global: { x: stageX * game.stage.scale.x, y: stageY * game.stage.scale.y },
             });
 
         }
@@ -28,14 +30,12 @@ export default async function main(game) {
     };
 
     setInterval(async () => {
-        const canvas = game.app.renderer.extract.canvas(game.stage);
-        const bitmap = await createImageBitmap(canvas);
-
-        worker.postMessage({
-            type: 'predict',
-            image: bitmap,
-        }, [bitmap]);
-
+        try {
+            const canvas = game.app.renderer.extract.canvas(game.stage);
+            if (!canvas || canvas.width <= 0 || canvas.height <= 0) return;
+            const bitmap = await createImageBitmap(canvas);
+            worker.postMessage({ type: 'predict', image: bitmap }, [bitmap]);
+        } catch (_) {}
     }, 200); // every 200ms
 
     return container;

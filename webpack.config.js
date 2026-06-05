@@ -35,6 +35,10 @@ module.exports = {
       {
         test: /\.(mp3|ogg)$/,
         type: 'asset/resource'
+      },
+      {
+        test: /\.onnx$/,
+        type: 'asset/resource'
       }
     ]
   },
@@ -61,6 +65,14 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'machine-learning/yolov5n_web_model'),
           to: 'yolov5n_web_model' // this will be accessible at runtime
+        },
+        {
+          from: path.resolve(__dirname, 'machine-learning/yolov5_onnx_model'),
+          to: 'yolov5_onnx_model' // ONNX model directory
+        },
+        {
+          from: path.resolve(__dirname, 'machine-learning/worker.js'),
+          to: 'worker.js' // Web Worker file
         }
       ]
     }),
