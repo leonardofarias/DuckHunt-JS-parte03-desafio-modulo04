@@ -1,6 +1,6 @@
 const DATASET_CLASS_ID = 0;
 const DATASET_CLASS_NAME = 'duck';
-const CAPTURE_INTERVAL_MS = 1000;
+const CAPTURE_INTERVAL_MS = 250;
 
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
@@ -69,7 +69,7 @@ function createDatasetButton(label, onClick) {
 
 export function setupDatasetCollector(game) {
     const params = new URLSearchParams(window.location.search);
-    if (!params.has('dataset')) return;
+    if (!params.has('dataset')) return false;
 
     let intervalId = null;
 
@@ -109,4 +109,6 @@ export function setupDatasetCollector(game) {
     toolbar.appendChild(captureButton);
     toolbar.appendChild(autoButton);
     document.body.appendChild(toolbar);
+
+    return true;
 }

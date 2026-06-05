@@ -59,7 +59,9 @@ http://localhost:8080/?dataset
 Ao abrir nesse modo, aparecerá uma barra no canto superior esquerdo com dois botões:
 
 - `Capturar frame`: baixa uma imagem `.png` do frame atual e um arquivo `.txt` com as labels YOLO
-- `Iniciar auto captura`: captura automaticamente um frame por segundo até ser interrompido
+- `Iniciar auto captura`: captura automaticamente um frame a cada 250ms até ser interrompido
+
+Nesse modo, a IA continua calculando predições, mas o clique automático é desativado para evitar que o jogo termine rápido durante a coleta.
 
 Cada arquivo `.txt` é gerado no formato YOLO:
 
